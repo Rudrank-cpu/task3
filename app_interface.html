@@ -1,0 +1,433 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Playlist Manager - Terminal GUI</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --cyan: #06b6d4;
+            --magenta: #d946ef;
+            --green: #22c55e;
+            --yellow: #eab308;
+            --red: #ef4444;
+            --text: #f8fafc;
+            --muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 950px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 24px;
+            background: var(--card);
+            border-radius: 12px;
+            border: 1px solid #334155;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+
+        header h1 {
+            margin: 0;
+            color: var(--magenta);
+            letter-spacing: 1.5px;
+            font-size: 2rem;
+        }
+
+        header p {
+            margin-top: 6px;
+            color: var(--cyan);
+            font-size: 0.95rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 1.2rem;
+            color: var(--cyan);
+            border-bottom: 2px solid #334155;
+            padding-bottom: 8px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        input {
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: var(--text);
+            padding: 12px;
+            border-radius: 8px;
+            outline: none;
+            font-size: 0.95rem;
+        }
+
+        input:focus { border-color: var(--cyan); }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        button:hover { opacity: 0.9; }
+        button:active { transform: scale(0.98); }
+
+        .btn-green { background: var(--green); color: #000; }
+        .btn-cyan { background: var(--cyan); color: #000; }
+        .btn-yellow { background: var(--yellow); color: #000; }
+        .btn-magenta { background: var(--magenta); color: #fff; }
+        .btn-red { background: var(--red); color: #fff; grid-column: span 2; }
+
+        .console-output {
+            background: #090d16;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            color: var(--green);
+            min-height: 220px;
+            max-height: 280px;
+            overflow-y: auto;
+            border: 1px solid #1e293b;
+            white-space: pre-wrap;
+        }
+
+        .song-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .song-card {
+            background: #0f172a;
+            padding: 14px;
+            border-radius: 8px;
+            border-left: 4px solid var(--cyan);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .song-info { display: flex; flex-direction: column; gap: 4px; }
+        .song-title { font-weight: bold; font-size: 1.05rem; }
+        .song-meta { font-size: 0.85rem; color: var(--muted); }
+        .song-time { font-size: 0.9rem; color: var(--yellow); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>MUSIC PLAYLIST MANAGER</h1>
+        <p>Launched from C++ Terminal</p>
+    </header>
+
+    <div class="grid">
+        <div class="card">
+            <h2>Playlist Controls</h2>
+            <div class="form-group">
+                <input type="text" id="title" placeholder="Song Title">
+                <input type="text" id="artist" placeholder="Artist Name">
+                <input type="text" id="theme" placeholder="Theme / Mood">
+                <input type="number" id="duration" placeholder="Duration (mins)" min="1">
+            </div>
+
+            <div class="btn-grid">
+                <button class="btn-green" onclick="addFront()">[1] Add Front</button>
+                <button class="btn-green" onclick="addEnd()">[2] Add End</button>
+                <button class="btn-cyan" onclick="displayPlaylist()">[3] Display All</button>
+                <button class="btn-yellow" onclick="searchSong()">[4] Search / Play</button>
+                <button class="btn-magenta" onclick="playArtist()">[7] By Artist</button>
+                <button class="btn-cyan" onclick="sortArtist()">[8] Sort Artist</button>
+                <button class="btn-magenta" onclick="playTheme()">[9] By Theme</button>
+                <button class="btn-yellow" onclick="randomize()">[6] Randomize</button>
+                <button class="btn-red" onclick="removeSong()">[5] Remove Song Title</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Terminal Output Log</h2>
+            <div id="console" class="console-output">System initialized... Ready for user commands.</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Active Playlist View</h2>
+        <div id="playlistView" class="song-list">
+            <div style="color: var(--muted);">Playlist is empty.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    class SongNode {
+        constructor(title, artist, theme, duration) {
+            this.title = title;
+            this.artist = artist;
+            this.theme = theme;
+            this.duration = Number(duration);
+            this.next = null;
+        }
+    }
+
+    class SongList {
+        constructor() {
+            this.start = null;
+            this.end = null;
+        }
+
+        add_song_front(s) {
+            let ns = new SongNode(s.title, s.artist, s.theme, s.duration);
+            if (!this.start) {
+                this.start = this.end = ns;
+            } else {
+                ns.next = this.start;
+                this.start = ns;
+            }
+        }
+
+        add_song_end(s) {
+            let ns = new SongNode(s.title, s.artist, s.theme, s.duration);
+            if (!this.start) {
+                this.start = this.end = ns;
+            } else {
+                this.end.next = ns;
+                this.end = ns;
+            }
+        }
+
+        toArray() {
+            let arr = [];
+            let ptr = this.start;
+            while (ptr) {
+                arr.push(ptr);
+                ptr = ptr.next;
+            }
+            return arr;
+        }
+
+        search(title) {
+            let ptr = this.start;
+            while (ptr) {
+                if (ptr.title.toLowerCase() === title.toLowerCase()) return ptr;
+                ptr = ptr.next;
+            }
+            return null;
+        }
+
+        removeSong(title) {
+            if (!this.start) return "Playlist Empty.";
+            let temp = this.start, prev = null;
+            while (temp && temp.title.toLowerCase() !== title.toLowerCase()) {
+                prev = temp;
+                temp = temp.next;
+            }
+            if (!temp) return "Song Not Found.";
+            if (temp === this.start) {
+                this.start = this.start.next;
+                if (!this.start) this.end = null;
+            } else {
+                prev.next = temp.next;
+                if (temp === this.end) this.end = prev;
+            }
+            return "Song Removed Successfully.";
+        }
+
+        randomize() {
+            let arr = this.toArray();
+            if (arr.length === 0) return "Playlist Empty.";
+            for (let i = arr.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            let res = "Randomized Playlist Queue:\n" + "-".repeat(30) + "\n";
+            arr.forEach((s, idx) => res += `${idx + 1}. ${s.title} - ${s.artist}\n`);
+            return res;
+        }
+
+        sort() {
+            if (!this.start || !this.start.next) return "Not enough songs to sort.";
+            for (let i = this.start; i !== null; i = i.next) {
+                for (let j = i.next; j !== null; j = j.next) {
+                    if (i.artist.toLowerCase() > j.artist.toLowerCase()) {
+                        [i.title, j.title] = [j.title, i.title];
+                        [i.artist, j.artist] = [j.artist, i.artist];
+                        [i.theme, j.theme] = [j.theme, i.theme];
+                        [i.duration, j.duration] = [j.duration, i.duration];
+                    }
+                }
+            }
+            return "Playlist Sorted by Artist Successfully.";
+        }
+
+        playArtist(artist) {
+            let ptr = this.start, found = false;
+            let res = `Songs by ${artist}:\n` + "-".repeat(30) + "\n";
+            while (ptr) {
+                if (ptr.artist.toLowerCase() === artist.toLowerCase()) {
+                    res += `Playing: ${ptr.title} (${ptr.duration} min)\n`;
+                    found = true;
+                }
+                ptr = ptr.next;
+            }
+            return found ? res : "Artist not found.";
+        }
+
+        playTheme(theme) {
+            let ptr = this.start, found = false;
+            let res = `Playing Theme: ${theme}\n` + "-".repeat(30) + "\n";
+            while (ptr) {
+                if (ptr.theme.toLowerCase() === theme.toLowerCase()) {
+                    res += `Playing: ${ptr.title} - ${ptr.artist}\n`;
+                    found = true;
+                }
+                ptr = ptr.next;
+            }
+            return found ? res : "No Songs Found.";
+        }
+    }
+
+    const playlist = new SongList();
+
+    function log(msg) {
+        document.getElementById('console').textContent = msg;
+    }
+
+    function getForm() {
+        return {
+            title: document.getElementById('title').value.trim(),
+            artist: document.getElementById('artist').value.trim(),
+            theme: document.getElementById('theme').value.trim(),
+            duration: document.getElementById('duration').value || 3
+        };
+    }
+
+    function render() {
+        const view = document.getElementById('playlistView');
+        const songs = playlist.toArray();
+        if (songs.length === 0) {
+            view.innerHTML = `<div style="color: var(--muted);">Playlist is empty.</div>`;
+            return;
+        }
+        view.innerHTML = songs.map((s, i) => `
+            <div class="song-card">
+                <div class="song-info">
+                    <span class="song-title">${i + 1}. ${s.title}</span>
+                    <span class="song-meta">Artist: ${s.artist} | Theme: ${s.theme}</span>
+                </div>
+                <span class="song-time">${s.duration} min</span>
+            </div>
+        `).join('');
+    }
+
+    function addFront() {
+        const f = getForm();
+        if (!f.title || !f.artist) return log("Error: Title and Artist are required!");
+        playlist.add_song_front(f);
+        log("Song Added Successfully at Front.");
+        render();
+    }
+
+    function addEnd() {
+        const f = getForm();
+        if (!f.title || !f.artist) return log("Error: Title and Artist are required!");
+        playlist.add_song_end(f);
+        log("Song Added Successfully at End.");
+        render();
+    }
+
+    function displayPlaylist() {
+        const songs = playlist.toArray();
+        if (songs.length === 0) return log("Playlist is empty.");
+        let res = "--- Playlist Display ---\n";
+        songs.forEach(s => {
+            res += `Title    : ${s.title}\nArtist   : ${s.artist}\nTheme    : ${s.theme}\nDuration : ${s.duration} min\n-----------------------------\n`;
+        });
+        log(res);
+        render();
+    }
+
+    function searchSong() {
+        const { title } = getForm();
+        if (!title) return log("Enter Song Title to Search.");
+        const s = playlist.search(title);
+        if (s) {
+            log(`Now Playing\nTitle    : ${s.title}\nArtist   : ${s.artist}\nTheme    : ${s.theme}\nDuration : ${s.duration} min`);
+        } else {
+            log("Song NOT FOUND!");
+        }
+    }
+
+    function removeSong() {
+        const { title } = getForm();
+        if (!title) return log("Enter Song Title to Remove.");
+        log(playlist.removeSong(title));
+        render();
+    }
+
+    function randomize() { log(playlist.randomize()); }
+    function sortArtist() { log(playlist.sort()); render(); }
+    function playArtist() {
+        const { artist } = getForm();
+        if (!artist) return log("Enter Artist Name.");
+        log(playlist.playArtist(artist));
+    }
+    function playTheme() {
+        const { theme } = getForm();
+        if (!theme) return log("Enter Theme Name.");
+        log(playlist.playTheme(theme));
+    }
+</script>
+
+</body>
+</html>
+    
